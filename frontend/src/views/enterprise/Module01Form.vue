@@ -73,6 +73,26 @@
           </el-col>
         </el-row>
 
+        <!-- 营业执照附件上传 -->
+        <div class="sub-section-title">
+          <el-icon style="vertical-align: middle; margin-right: 4px;"><Paperclip /></el-icon>
+          营业执照附件上传
+          <el-tag size="small" type="warning" style="margin-left: 8px;">必须上传</el-tag>
+        </div>
+        <el-alert type="info" :closable="false" style="margin-bottom: 12px;">
+          <template #default>
+            请上传营业执照扫描件（PDF 格式）或照片（JPG/PNG），文件大小不超过 5MB。<br/>
+            <strong>Demo 说明：</strong>文件仅保存在当前浏览器本地，不会上传至服务器。
+          </template>
+        </el-alert>
+        <DemoFileUpload
+          :storage-key="`demo_attach_${auth.user?.reportId}_module_01_businessLicense`"
+          accept="application/pdf,image/jpeg,image/png"
+          :max-size-mb="5"
+          hint="支持 PDF、JPG、PNG，不超过 5MB。建议上传营业执照 PDF 扫描件"
+          @change="onLicenseUpload"
+        />
+
         <!-- Near 3 Years Sales -->
         <div class="sub-section-title">近三年主营业务年销售收入（万元）</div>
         <el-table :data="form.salesThreeYears" border style="width: 100%; margin-bottom: 16px;">
@@ -340,6 +360,8 @@ import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import { COMPANY_NATURE_OPTIONS, INDUSTRY_OPTIONS, ANNUAL_CHECK_OPTIONS } from '@/utils/moduleConfig'
 import { ElMessage } from 'element-plus'
+import { Paperclip } from '@element-plus/icons-vue'
+import DemoFileUpload from '@/components/DemoFileUpload.vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -354,6 +376,7 @@ const defaultProduct = () => ({
 const form = reactive({
   companyNameCn: '', companyNameEn: '', creditCode: '', licenseAuthority: '', licenseValidity: '',
   registeredCapital: null, companyNature: [], industry: [], businessScope: '', annualCheck: '已通过',
+  businessLicense: null, // { name, size, type, uploadedAt }
   salesThreeYears: [
     { year: new Date().getFullYear() - 2, amount: null },
     { year: new Date().getFullYear() - 1, amount: null },
@@ -379,6 +402,15 @@ function calcPercent() {}
 
 function addProduct() { form.mainProducts.push(defaultProduct()) }
 function removeProduct(idx) { form.mainProducts.splice(idx, 1) }
+
+function onLicenseUpload(fileInfo) {
+  // 将上传文件信息记录到表单，方便管理员查看
+  if (fileInfo) {
+    form.businessLicense = { name: fileInfo.name, size: fileInfo.size, type: fileInfo.type, uploadedAt: new Date().toISOString() }
+  } else {
+    form.businessLicense = null
+  }
+}
 
 function loadExisting() {
   const report = dataStore.getReportById(auth.user?.reportId)

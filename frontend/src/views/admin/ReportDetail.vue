@@ -76,6 +76,30 @@
                 <template #default="{ row }">{{ row.amount?.toLocaleString() }}</template>
               </el-table-column>
             </el-table>
+
+            <!-- 营业执照附件预览 -->
+            <div class="sub-title" style="margin-top: 20px;">
+              <el-icon style="vertical-align: middle; margin-right: 4px;"><Paperclip /></el-icon>
+              营业执照附件
+            </div>
+            <template v-if="d01.businessLicense">
+              <el-alert
+                type="info"
+                :closable="false"
+                style="margin-bottom: 12px;"
+                title="以下文件由企业用户在其浏览器中上传，仅可在同一浏览器中预览（Demo 模式限制）"
+              />
+              <DemoFileUpload
+                :storage-key="`demo_attach_${report.id}_module_01_businessLicense`"
+                :readonly="true"
+              />
+            </template>
+            <el-empty
+              v-else
+              description="企业未上传营业执照附件"
+              :image-size="60"
+              style="padding: 20px 0;"
+            />
           </template>
           <el-empty v-else description="该模块暂无数据" />
         </el-tab-pane>
@@ -133,8 +157,9 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useDataStore } from '@/stores/data'
 import { MODULE_LIST, MODULE_TABLE_CONFIG } from '@/utils/moduleConfig'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Paperclip } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import DemoFileUpload from '@/components/DemoFileUpload.vue'
 
 const route = useRoute()
 const router = useRouter()
