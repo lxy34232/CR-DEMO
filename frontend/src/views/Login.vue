@@ -82,6 +82,7 @@
             </el-form-item>
             <el-button
               type="primary"
+              native-type="button"
               size="large"
               :loading="loading"
               @click="handleLogin"
@@ -110,6 +111,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useDataStore } from '@/stores/data'
 import { ElMessage } from 'element-plus'
 import { User, Lock } from '@element-plus/icons-vue'
+import { NavigationFailureType, isNavigationFailure } from 'vue-router'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -151,22 +153,28 @@ function quickLogin(role) {
 }
 
 async function handleLogin() {
-  try {
-    await formRef.value?.validate()
-  } catch { return }
+  if (loading.value) return // prevent concurrent submissions
 
   loading.value = true
+  try {
+    await formRef.value?.validate()
+  } catch {
+    loading.value = false
+    return
+  }
+
   await new Promise(r => setTimeout(r, 500)) // Simulate network
   const result = auth.login(form.username, form.password)
   loading.value = false
 
   if (result.success) {
     ElMessage.success('登录成功')
-    if (auth.isAdmin) {
-      router.push('/admin/dashboard')
-    } else {
-      router.push('/enterprise/dashboard')
-    }
+    const target = auth.isAdmin ? '/admin/dashboard' : '/enterprise/dashboard'
+    router.push(target).catch(err => {
+      if (!isNavigationFailure(err, NavigationFailureType.duplicated | NavigationFailureType.cancelled)) {
+        console.error(err)
+      }
+    })
   } else {
     ElMessage.error(result.message)
   }

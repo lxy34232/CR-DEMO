@@ -7,15 +7,22 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 import App from './App.vue'
 import router from './router'
+import { useAuthStore } from './stores/auth'
 
 const app = createApp(App)
+const pinia = createPinia()
 
 // Register all Element Plus icons
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
 
-app.use(createPinia())
+app.use(pinia)
+
+// Initialise auth state from localStorage once, before the router starts
+// so the navigation guard can immediately read the correct login state.
+useAuthStore().init()
+
 app.use(router)
 app.use(ElementPlus, { locale: zhCn })
 
